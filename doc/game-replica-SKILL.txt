@@ -1,0 +1,423 @@
+# Game Replica Skill
+
+## 1. Overview
+
+`game-replica` 用于在用户拥有源代码，或明确拥有修改、复刻、再创作权限的前提下，对现有游戏项目进行结构化复刻。
+
+本 Skill 的目标不是“看起来差不多”，而是建立可验证的等价复刻流程：
+
+```text
+源码级理解
+    ↓
+功能等价重写
+    ↓
+参数与资源规格锁定
+    ↓
+自动化验证
+```
+
+核心原则：
+
+* 保持原项目技术框架、构建方式和运行平台。
+* 保持原有功能、游戏逻辑、输入输出、事件顺序和状态转换。
+* 保持核心参数、数值、碰撞、物理、动画和关卡规则。
+* 允许重命名变量、函数、类、文件和模块，但必须记录映射关系。
+* 允许按用户要求重新制作美术资源，但必须保持资源规格和引用关系。
+* 最终必须通过验证阶段，不能仅凭主观判断宣布完成。
+
+## 2. Mandatory Workflow
+
+必须严格按以下顺序执行：
+
+```text
+01 source-analyzer
+        ↓
+02 code-replica
+        ↓
+03 asset-restyle
+        ↓
+04 replica-validator
+```
+
+硬性门禁：
+
+* 禁止在 `source-analyzer` 完成前大规模重写代码。
+* 禁止在 `PARAMETER_LOCK.json` 建立前修改游戏参数。
+* 禁止在 `ASSET_MANIFEST.json` 建立前替换或生成资源。
+* 禁止修改原项目源码。复刻项目默认创建在原项目上层目录，命名为 `<原项目文件夹名>_replace`。
+* 复刻项目必须尽量保持原项目的文件和目录布局一致。
+* 禁止在 `asset-restyle` 完成前改变资源尺寸、比例、格式或 Sprite Sheet 结构。
+* 禁止在 `replica-validator` 完成前声称复刻完成。
+* 禁止通过降低验证标准、删除检查项或修改锁定参数来规避失败。
+
+## Replica Workspace
+
+在进入代码和资源修改前，必须创建独立的复刻工作区：
+
+```text
+<parent>/
+├── <original-folder-name>/
+└── <original-folder-name>_replace/
+```
+
+原项目只作为分析和验证输入，不得直接修改源码、配置、资源、场景或构建文件。
+
+复刻项目的相对路径应与原项目保持一致：
+
+```text
+Original: <original>/src/main.ts
+Replica:  <original>_replace/src/main.ts
+
+Original: <original>/assets/player_idle.png
+Replica:  <original>_replace/assets/player_idle.png
+```
+
+如果必须调整布局，必须在 `REPLICATION_REPORT.md` 中记录原路径、新路径、原因和验证影响。
+
+## 3. Phase 01: Source Analyzer
+
+调用：
+
+```text
+source-analyzer
+```
+
+目标：建立原始项目的完整技术规格、行为规格、参数锁和资源清单。
+
+必须分析：
+
+* 框架、语言、版本、构建系统、包管理器、入口文件和运行平台。
+* 目录结构、核心模块、类、函数、配置和外部依赖。
+* 游戏循环、状态机、输入系统、事件系统、UI、音频、物理、AI、动画、场景和关卡。
+* 所有影响玩法和体验的参数、数值、时间、尺寸、概率、倍率和阈值。
+* 图片、音频、字体、Sprite Sheet、图集、动画帧和资源引用关系。
+
+阶段输出：
+
+```text
+replication/
+├── SOURCE_SPEC.md
+├── ARCHITECTURE.md
+├── PARAMETER_LOCK.json
+├── SYMBOL_MAP.json
+├── ASSET_MANIFEST.json
+└── REPLICATION_PLAN.md
+```
+
+只有以上文件全部生成并可读取后，才能进入 Phase 02。
+
+## 4. Phase 02: Code Replica
+
+调用：
+
+```text
+code-replica
+```
+
+输入：
+
+```text
+replication/SOURCE_SPEC.md
+replication/ARCHITECTURE.md
+replication/PARAMETER_LOCK.json
+replication/SYMBOL_MAP.json
+replication/REPLICATION_PLAN.md
+```
+
+目标：在保持原框架和原行为的前提下，重新实现游戏代码。
+
+必须保持：
+
+* 技术框架、项目结构语义和构建方式。
+* 功能、规则、状态转换、事件链、输入映射和输出行为。
+* 数据结构语义、API 行为、副作用、生命周期和依赖关系。
+* 锁定参数、默认配置、碰撞参数、物理参数和动画时间。
+
+允许：
+
+* 变量、函数、类、文件和模块重命名。
+* 注释重写。
+* 在行为不变的前提下调整内部代码组织。
+
+禁止：
+
+* 修改核心数值、游戏规则、默认配置、输入映射或状态逻辑。
+* 删除原有功能。
+* 添加用户没有要求的新功能。
+* 擅自迁移框架，例如 `Phaser → React`、`Cocos → Unity`、`Unity → Godot`。
+
+阶段输出：
+
+```text
+replication/CODE_REPLICA_REPORT.md
+```
+
+## 5. Phase 03: Asset Restyle
+
+调用：
+
+```text
+asset-restyle
+```
+
+输入：
+
+```text
+replication/ASSET_MANIFEST.json
+replication/SOURCE_SPEC.md
+用户提供的视觉风格要求
+```
+
+目标：在不破坏资源规格和引用关系的前提下，批量重新制作、整理或统一游戏图片资源。
+
+必须保持：
+
+* 资源数量、用途、路径或资源 ID 的引用语义。
+* 图片宽高、比例、格式、Alpha 通道要求和文件命名策略。
+* Sprite Sheet 布局、帧尺寸、帧数量、帧顺序和动画引用。
+* 资源被代码、配置、关卡、图集或动画系统引用的方式。
+
+默认规则：
+
+```text
+原始资源尺寸 = 新资源目标尺寸
+```
+
+示例：
+
+```text
+512 × 512   → 512 × 512
+1024 × 512  → 1024 × 512
+```
+
+不得因为 AI 生成结果尺寸不同而直接替换原资源。必须先进行 Resize、Crop、Padding、格式转换和 Alpha 校验。
+
+阶段输出：
+
+```text
+replication/STYLE_SPEC.md
+replication/ASSET_RESTYLE_REPORT.md
+更新后的 replication/ASSET_MANIFEST.json
+```
+
+## 6. Phase 04: Replica Validator
+
+调用：
+
+```text
+replica-validator
+```
+
+目标：对原项目与复刻项目进行最终验证，并生成复刻报告。
+
+至少检查：
+
+```text
+Framework
+Build
+Structure
+Parameters
+Functions
+Game Logic
+Input
+Events
+Assets
+Sprite Sheets
+Animation
+UI
+Runtime
+Critical Behavior
+```
+
+发现问题时必须按来源回退：
+
+```text
+参数错误     → code-replica
+代码行为错误 → code-replica
+资源规格错误 → asset-restyle
+分析缺失     → source-analyzer
+```
+
+修复后必须重新运行 `replica-validator`。
+
+## 7. Parameter Lock
+
+所有影响游戏行为的重要参数必须写入 `PARAMETER_LOCK.json`，默认锁定。
+
+示例：
+
+```json
+{
+  "player_speed": {
+    "value": 320,
+    "source": "src/config/player.ts",
+    "locked": true,
+    "category": "movement"
+  },
+  "jump_force": {
+    "value": 680,
+    "source": "src/config/player.ts",
+    "locked": true,
+    "category": "physics"
+  },
+  "gravity": {
+    "value": 1800,
+    "source": "src/config/world.ts",
+    "locked": true,
+    "category": "physics"
+  }
+}
+```
+
+验证规则：
+
+```text
+Original Value == Replica Value
+```
+
+任何不一致均为失败，不能自行把原始值改成复刻值。
+
+## 8. Symbol Mapping
+
+允许重命名，但必须维护语义映射。
+
+示例：
+
+```json
+{
+  "GameManager": {
+    "replica": "GameRuntime",
+    "type": "class",
+    "role": "game_runtime"
+  },
+  "PlayerController": {
+    "replica": "HeroController",
+    "type": "class",
+    "role": "player_control"
+  }
+}
+```
+
+名称可以变化，职责、行为、输入输出和副作用必须保持一致。
+
+## 9. Asset Manifest
+
+每个资源必须记录 Manifest。
+
+示例：
+
+```json
+{
+  "player_idle": {
+    "source": "assets/player_idle.png",
+    "replica": "assets/player_idle.png",
+    "width": 512,
+    "height": 512,
+    "format": "png",
+    "alpha": true,
+    "category": "character",
+    "sprite_sheet": false,
+    "frame_count": 1,
+    "locked": true
+  }
+}
+```
+
+AI 生成的新资源必须经过：
+
+```text
+Generate
+    ↓
+Resize / Crop / Padding
+    ↓
+Format Conversion
+    ↓
+Alpha Validation
+    ↓
+Dimension Validation
+    ↓
+Manifest Validation
+```
+
+## 10. Completion Criteria
+
+只有以下条件全部满足，才能报告：
+
+```text
+REPLICATION COMPLETE
+```
+
+完成检查：
+
+* [ ] Framework unchanged
+* [ ] Build succeeds
+* [ ] Required modules exist
+* [ ] Core functions implemented
+* [ ] Parameters match
+* [ ] Game logic preserved
+* [ ] Input preserved
+* [ ] Events preserved
+* [ ] Assets mapped
+* [ ] Asset dimensions valid
+* [ ] Sprite Sheets valid
+* [ ] Animations valid
+* [ ] Runtime starts
+* [ ] Critical behavior tested
+* [ ] No unresolved CRITICAL or HIGH differences
+
+## 11. Behavioral Rules
+
+### Source Priority
+
+如果源码存在，优先级为：
+
+```text
+源码 > 构建结果 / 运行结果 > 截图 / 录屏 > 用户描述 > AI 推测
+```
+
+### No Unrequested Optimization
+
+不得为了“优化代码”而改变算法结果、参数、游戏机制、时间、速度、碰撞、概率或行为，除非用户明确要求。
+
+### No Framework Migration
+
+不得擅自迁移游戏框架或运行平台。用户明确要求迁移时，必须在 `REPLICATION_REPORT.md` 中记录差异和不可等价部分。
+
+### No Silent Changes
+
+任何无法保持一致的地方都必须记录到：
+
+```text
+replication/REPLICATION_REPORT.md
+```
+
+不得静默修改。
+
+## 12. Final Output
+
+最终输出：
+
+```text
+replication/
+├── SOURCE_SPEC.md
+├── ARCHITECTURE.md
+├── PARAMETER_LOCK.json
+├── SYMBOL_MAP.json
+├── ASSET_MANIFEST.json
+├── REPLICATION_PLAN.md
+├── CODE_REPLICA_REPORT.md
+├── STYLE_SPEC.md
+├── ASSET_RESTYLE_REPORT.md
+└── REPLICATION_REPORT.md
+```
+
+`REPLICATION_REPORT.md` 必须说明：
+
+* 已完成内容。
+* 参数一致性。
+* 资源一致性。
+* 编译结果。
+* 测试结果。
+* 未解决问题。
+* 与原项目存在的差异。
+* 最终状态：`REPLICATION COMPLETE` 或 `REPLICATION INCOMPLETE`。

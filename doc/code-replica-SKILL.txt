@@ -1,0 +1,293 @@
+# Code Replica Skill
+
+## 1. Purpose
+
+`code-replica` 根据 `source-analyzer` 输出的规格重新实现游戏代码。
+
+目标：
+
+```text
+功能等价，而不是源码文字复制。
+```
+
+## 2. Required Input
+
+必须读取：
+
+```text
+replication/SOURCE_SPEC.md
+replication/ARCHITECTURE.md
+replication/PARAMETER_LOCK.json
+replication/SYMBOL_MAP.json
+replication/REPLICATION_PLAN.md
+```
+
+缺少任意核心文件时：
+
+```text
+STOP
+    ↓
+返回 source-analyzer
+```
+
+## Output Location
+
+禁止修改原项目源码。复刻项目必须默认创建在原项目上层目录：
+
+```text
+<original-folder-name>_replace
+```
+
+示例：
+
+```text
+D:\games\demo
+D:\games\demo_replace
+```
+
+所有代码修改、资源替换、构建修复和复刻报告都应发生在 `_replace` 工作区中。原项目只作为只读分析和验证输入。
+
+复刻项目必须尽量保持原项目文件布局一致：
+
+```text
+Original: src/main.ts
+Replica:  src/main.ts
+
+Original: assets/ui/start.png
+Replica:  assets/ui/start.png
+```
+
+如必须改变路径或布局，必须记录到：
+
+```text
+replication/CODE_REPLICA_REPORT.md
+replication/REPLICATION_REPORT.md
+```
+
+## 3. Framework Rule
+
+必须使用原项目框架、语言、构建系统和运行平台。
+
+示例：
+
+```text
+Original: Phaser + TypeScript + Vite
+Replica:  Phaser + TypeScript + Vite
+```
+
+禁止擅自迁移：
+
+```text
+Phaser → React
+Phaser → Unity
+Cocos  → Unity
+Unity  → Godot
+```
+
+除非用户明确要求，否则框架迁移不属于复刻。
+
+## 4. Naming Rule
+
+允许修改：
+
+```text
+Class Name
+Function Name
+Variable Name
+File Name
+Module Name
+```
+
+示例：
+
+```text
+PlayerController → HeroController
+```
+
+但必须更新 `SYMBOL_MAP.json`：
+
+```json
+{
+  "PlayerController": {
+    "replica": "HeroController",
+    "type": "class",
+    "role": "player_control"
+  }
+}
+```
+
+名称可以不同，职责和行为不能不同。
+
+## 5. Parameter Rule
+
+所有锁定参数必须来自：
+
+```text
+replication/PARAMETER_LOCK.json
+```
+
+禁止对锁定参数进行：
+
+```text
+优化
+调整
+平衡
+重新计算
+猜测
+```
+
+失败示例：
+
+```text
+Original: PLAYER_SPEED = 320
+Replica:  PLAYER_SPEED = 300
+Result:   FAIL
+```
+
+参数不一致时，应修复复刻代码，而不是修改原始锁定值。
+
+## 6. Logic Rule
+
+必须保持：
+
+```text
+Input
+State
+Event
+Condition
+Calculation
+Timing
+Collision
+Animation
+Score
+Damage
+Health
+Spawn
+Despawn
+Win
+Lose
+```
+
+不得删除原有功能，不得加入用户没有要求的新游戏机制。
+
+## 7. Implementation Strategy
+
+按模块逐个实现：
+
+```text
+1. Entry
+2. Configuration
+3. Core Runtime
+4. Game State
+5. Player
+6. Enemy
+7. Level
+8. Physics
+9. UI
+10. Audio
+11. Input
+12. Assets
+13. Save/Data
+```
+
+每完成一个重要模块：
+
+```text
+Compile
+    ↓
+Basic Test
+    ↓
+Update Report
+    ↓
+Continue
+```
+
+不要等全部代码完成后才进行第一次编译。
+
+## 8. Function Mapping
+
+建立原函数到复刻函数的映射。
+
+示例：
+
+```text
+updatePlayer() → updateHero()
+spawnEnemy()   → createMonster()
+```
+
+名称可以不同，以下内容必须保持：
+
+* 输入参数语义。
+* 返回值语义。
+* 状态读写。
+* 事件触发。
+* 副作用。
+* 调用顺序。
+
+## 9. Dependency Preservation
+
+如果原项目存在：
+
+```text
+A → B → C
+```
+
+复刻项目必须保留对应的行为依赖。
+
+不得因为重构而破坏：
+
+```text
+Event
+State
+Callback
+Reference
+Lifecycle
+Initialization Order
+Update Order
+```
+
+## 10. Build Verification
+
+每完成一个重要模块必须执行构建或类型检查。
+
+检查：
+
+```text
+Compilation
+Type Errors
+Import Errors
+Runtime Errors
+Missing References
+Missing Assets
+```
+
+构建失败时必须先定位并修复，不得继续堆叠后续模块。
+
+## 11. Report
+
+完成后生成：
+
+```text
+replication/CODE_REPLICA_REPORT.md
+```
+
+报告必须包含：
+
+* Implemented Modules
+* Renamed Symbols
+* Preserved Parameters
+* Preserved Functions
+* Known Differences
+* Build Result
+* Remaining Issues
+
+## 12. Completion Gate
+
+只有以下条件全部满足后，才允许进入 `asset-restyle`：
+
+* [ ] 必要模块已实现。
+* [ ] 锁定参数已保持一致。
+* [ ] 符号映射已更新。
+* [ ] 构建或类型检查已执行。
+* [ ] 已知差异已记录。
+* [ ] `CODE_REPLICA_REPORT.md` 已生成。

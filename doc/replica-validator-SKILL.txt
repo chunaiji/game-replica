@@ -1,0 +1,431 @@
+# Replica Validator Skill
+
+## 1. Purpose
+
+`replica-validator` 对原始项目和复刻项目进行最终差异检查，是 `game-replica` 流程的最终 Gate。
+
+本阶段负责判定复刻是否完成。不得通过降低验证标准、跳过失败项或修改锁定文件来获得通过。
+
+## 2. Required Input
+
+必须读取：
+
+```text
+Original Project
+Replica Project
+
+replication/SOURCE_SPEC.md
+replication/ARCHITECTURE.md
+replication/PARAMETER_LOCK.json
+replication/SYMBOL_MAP.json
+replication/ASSET_MANIFEST.json
+replication/CODE_REPLICA_REPORT.md
+replication/ASSET_RESTYLE_REPORT.md
+```
+
+缺少核心输入时，验证结果必须为：
+
+```text
+REPLICATION INCOMPLETE
+```
+
+并说明需要返回的阶段。
+
+## 3. Validation Pipeline
+
+严格执行：
+
+```text
+1. Framework Validation
+2. Build Validation
+3. Structure Validation
+4. Parameter Validation
+5. Function Validation
+6. Event Validation
+7. Input Validation
+8. Asset Validation
+9. Animation Validation
+10. Runtime Validation
+11. Critical Behavior Validation
+12. Final Report
+```
+
+## 4. Framework Validation
+
+检查：
+
+```text
+Engine
+Language
+Version
+Build Tool
+Dependencies
+Runtime
+Target Platform
+```
+
+示例：
+
+```text
+Original: Phaser 3
+Replica:  Phaser 3
+Result:   PASS
+```
+
+框架、语言或构建方式不一致时，必须标记为差异。未经用户要求的迁移应视为失败。
+
+## 5. Build Validation
+
+必须执行项目对应的构建、类型检查或最接近的可用验证命令。
+
+检查：
+
+```text
+Install State
+Compilation
+Type Errors
+Import Errors
+Missing Files
+Missing Assets
+Runtime Startup Errors
+```
+
+如果因为环境限制无法运行构建，必须在报告中记录原因和剩余风险。
+
+## 6. Parameter Validation
+
+读取：
+
+```text
+replication/PARAMETER_LOCK.json
+```
+
+逐项比较：
+
+```text
+Original vs Replica
+```
+
+示例：
+
+```text
+PLAYER_SPEED
+Original: 320
+Replica:  320
+Result:   PASS
+```
+
+失败示例：
+
+```text
+PLAYER_SPEED
+Original: 320
+Replica:  300
+Result:   FAIL
+```
+
+参数不一致必须修复复刻项目，不得修改原始锁定值。
+
+## 7. Function Validation
+
+检查：
+
+```text
+Function Exists
+Function Inputs
+Function Outputs
+Function Side Effects
+Function Dependencies
+Lifecycle
+Update Order
+```
+
+允许名称不同，但必须根据 `SYMBOL_MAP.json` 确认语义对应。
+
+## 8. Event Validation
+
+检查：
+
+```text
+Event Name
+Trigger
+Condition
+Payload
+Handler
+Order
+Side Effects
+```
+
+示例：
+
+```text
+PlayerDeath
+    ↓
+GameOver
+    ↓
+ShowResult
+```
+
+复刻项目必须保持相同的行为链。
+
+## 9. Input Validation
+
+检查：
+
+```text
+Keyboard
+Mouse
+Touch
+Controller
+Gesture
+Virtual Joystick
+```
+
+必须保持：
+
+```text
+Input → Action
+```
+
+对应关系。输入延迟、长按、连击、拖拽、方向映射等行为也应纳入验证。
+
+## 10. Asset Validation
+
+逐个检查：
+
+```text
+Filename
+Path
+Width
+Height
+Ratio
+Format
+Alpha
+Sprite Sheet
+Frame Count
+Reference
+```
+
+示例：
+
+```text
+player.png
+Original: 512 × 512 PNG RGBA
+Replica:  512 × 512 PNG RGBA
+Result:   PASS
+```
+
+资源缺失、尺寸不一致、Alpha 错误或引用断裂时，必须标记为失败。
+
+## 11. Animation Validation
+
+检查：
+
+```text
+Frame Count
+Frame Order
+Frame Size
+Animation Speed
+Loop
+Pivot
+Origin
+Anchor
+Hitbox Reference
+```
+
+动画帧结构不同可能直接影响碰撞、攻击时机或手感，必须作为高优先级问题处理。
+
+## 12. Runtime Validation
+
+启动游戏并检查：
+
+```text
+Startup
+Main Menu
+Game Start
+Player Control
+Enemy
+Collision
+Score
+Health
+Level
+Win
+Lose
+Restart
+UI
+Audio
+```
+
+如果自动化能力允许，应使用：
+
+```text
+Headless Test
+Screenshot Test
+Input Simulation
+Runtime Log
+```
+
+## 13. Critical Behavior Validation
+
+优先验证最影响游戏体验的行为：
+
+```text
+Player Movement
+Jump
+Attack
+Damage
+Collision
+Enemy AI
+Game State
+Level Transition
+Win/Lose
+Score
+Timer
+```
+
+这些行为任一发生关键差异，都不得宣布完成。
+
+## 14. Difference Classification
+
+所有差异必须分类：
+
+```text
+CRITICAL
+HIGH
+MEDIUM
+LOW
+```
+
+### CRITICAL
+
+```text
+Game cannot start
+Game cannot build
+Core mechanic changed
+Parameter changed
+State machine broken
+Asset missing
+```
+
+### HIGH
+
+```text
+Major UI broken
+Animation broken
+Input broken
+Enemy behavior changed
+Important event order changed
+```
+
+### MEDIUM
+
+```text
+Minor layout difference
+Non-critical visual difference
+Non-blocking audio difference
+```
+
+### LOW
+
+```text
+Naming difference
+Comment difference
+Internal implementation difference
+Non-behavioral file organization difference
+```
+
+## 15. Repair Routing
+
+如果发现问题，按来源返回对应阶段：
+
+```text
+Parameter    → code-replica
+Architecture → source-analyzer
+Code         → code-replica
+Asset        → asset-restyle
+Animation    → asset-restyle 或 code-replica，取决于问题来源
+Input/Event  → code-replica
+Unknown      → source-analyzer
+```
+
+修复后必须重新运行 `replica-validator`。
+
+## 16. Final Report
+
+生成：
+
+```text
+replication/REPLICATION_REPORT.md
+```
+
+推荐格式：
+
+```text
+# Replication Report
+
+## Framework
+PASS / FAIL
+
+## Build
+PASS / FAIL / NOT RUN
+
+## Parameters
+PASS / FAIL
+
+## Functions
+PASS / FAIL
+
+## Game Logic
+PASS / FAIL
+
+## Input
+PASS / FAIL
+
+## Events
+PASS / FAIL
+
+## Assets
+PASS / FAIL
+
+## Animation
+PASS / FAIL
+
+## Runtime
+PASS / FAIL / NOT RUN
+
+## Critical Behavior
+PASS / FAIL
+
+## Differences
+| Severity | Area | Description | Route |
+| --- | --- | --- | --- |
+
+## Known Limitations
+
+## Final Status
+REPLICATION COMPLETE / REPLICATION INCOMPLETE
+```
+
+## 17. Completion Rule
+
+只有同时满足以下条件，才能输出：
+
+```text
+REPLICATION COMPLETE
+```
+
+条件：
+
+* `CRITICAL = 0`
+* `HIGH = 0`
+* `Build = PASS`
+* `Parameters = PASS`
+* `Runtime = PASS`
+* 关键行为验证通过
+* 未解决差异均已记录并确认不影响核心复刻目标
+
+否则必须输出：
+
+```text
+REPLICATION INCOMPLETE
+```

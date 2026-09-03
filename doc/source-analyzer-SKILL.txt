@@ -1,0 +1,309 @@
+# Source Analyzer Skill
+
+## 1. Purpose
+
+`source-analyzer` 负责对原始游戏项目进行源码级分析，是 `game-replica` 流程的第一阶段。
+
+本阶段只分析和建档，禁止直接修改原项目，禁止在分析完成前开始大规模重写。
+
+## 2. Input
+
+输入：
+
+```text
+Original Game Source
+```
+
+可能包含：
+
+```text
+Unity / Unreal / Godot / Cocos / Phaser / PixiJS
+JavaScript / TypeScript / C# / C++ / Python / Java
+其他游戏框架、脚本语言或自研引擎
+```
+
+## 3. Required Output
+
+必须生成：
+
+```text
+replication/
+├── SOURCE_SPEC.md
+├── ARCHITECTURE.md
+├── PARAMETER_LOCK.json
+├── SYMBOL_MAP.json
+├── ASSET_MANIFEST.json
+└── REPLICATION_PLAN.md
+```
+
+缺少任意文件时，本阶段不得视为完成。
+
+## 4. Analysis Order
+
+严格按照以下顺序分析：
+
+```text
+1. Detect Framework
+2. Detect Build System
+3. Scan Directory
+4. Scan Source Files
+5. Analyze Modules
+6. Analyze Classes
+7. Analyze Functions
+8. Analyze Game States
+9. Analyze Parameters
+10. Analyze Events
+11. Analyze Input
+12. Analyze Assets
+13. Analyze Scenes
+14. Analyze External Dependencies
+15. Build Replication Specification
+```
+
+## 5. Framework Detection
+
+必须识别：
+
+```text
+Engine
+Language
+Version
+Build Tool
+Package Manager
+Entry Point
+Runtime
+Target Platform
+```
+
+示例：
+
+```text
+Engine: Phaser 3
+Language: TypeScript
+Build Tool: Vite
+Package Manager: npm
+Entry Point: src/main.ts
+Target Platform: Web
+```
+
+如果版本无法直接确认，必须记录推断依据和不确定性。
+
+## 6. Architecture Analysis
+
+生成 `ARCHITECTURE.md`，记录模块结构、职责和依赖关系。
+
+推荐格式：
+
+```text
+Application
+ ├── Entry
+ ├── Game
+ │   ├── Runtime
+ │   ├── State
+ │   ├── Player
+ │   ├── Enemy
+ │   ├── Level
+ │   └── Physics
+ ├── UI
+ ├── Audio
+ ├── Assets
+ └── Config
+```
+
+必须说明：
+
+* 每个核心模块的职责。
+* 模块之间的调用、事件、生命周期或数据依赖。
+* 初始化顺序和运行时更新顺序。
+* 复刻时必须保留的结构语义。
+
+## 7. Parameter Extraction
+
+扫描来源：
+
+```text
+const / let / var / enum
+config / JSON / YAML / XML
+ScriptableObject
+environment
+constants
+game settings
+physics settings
+animation settings
+level settings
+```
+
+重点识别：
+
+```text
+速度、加速度、重力、跳跃力度、生命值、攻击力、防御力
+冷却时间、伤害、碰撞范围、动画速度、移动速度
+关卡参数、AI 参数、生成概率、时间、距离、尺寸、倍率
+```
+
+生成 `PARAMETER_LOCK.json`。所有能够影响游戏行为的核心参数默认：
+
+```json
+{
+  "locked": true
+}
+```
+
+每个参数建议记录：
+
+```json
+{
+  "value": 320,
+  "source": "src/config/player.ts",
+  "category": "movement",
+  "used_by": ["PlayerController.update"],
+  "locked": true
+}
+```
+
+## 8. Symbol Mapping
+
+建立 `SYMBOL_MAP.json`，记录原始符号的类型、语义角色和允许的复刻名称。
+
+示例：
+
+```json
+{
+  "PlayerController": {
+    "type": "class",
+    "role": "player_control",
+    "replica": null,
+    "source": "src/player/PlayerController.ts"
+  }
+}
+```
+
+不要求名称保持一致，但必须记录原始名称和语义。后续重命名时必须更新 `replica` 字段。
+
+## 9. Asset Analysis
+
+扫描：
+
+```text
+.png / .jpg / .jpeg / .webp / .svg / .gif
+.atlas / .json / .sprite / .psd
+音频、字体、图集、粒子、关卡资源
+```
+
+生成 `ASSET_MANIFEST.json`，至少记录：
+
+```text
+filename
+path
+width
+height
+format
+alpha
+file_size
+sprite_sheet
+frame_count
+animation
+reference_count
+usage
+locked
+```
+
+对于 Sprite Sheet 必须记录：
+
+```text
+sheet_width
+sheet_height
+rows
+columns
+frame_width
+frame_height
+frame_count
+frame_order
+```
+
+## 10. Game Logic Analysis
+
+重点分析：
+
+```text
+Game Loop
+State Machine
+Player State
+Enemy State
+Level State
+Win Condition
+Lose Condition
+Score
+Health
+Damage
+Collision
+Spawn
+Despawn
+Timer
+Animation
+Input
+Event
+```
+
+必须记录状态转换。
+
+示例：
+
+```text
+Idle
+ ↓
+Run
+ ↓
+Jump
+ ↓
+Fall
+ ↓
+Land
+ ↓
+Idle
+```
+
+状态转换必须包含触发条件、输入、事件、副作用和参数来源。
+
+## 11. Replication Plan
+
+生成 `REPLICATION_PLAN.md`。
+
+推荐格式：
+
+```text
+Original Module
+        ↓
+Required Replica Module
+        ↓
+Dependencies
+        ↓
+Parameters
+        ↓
+Assets
+        ↓
+Validation
+```
+
+每个模块必须说明：
+
+* 需要复刻的行为。
+* 依赖的参数和资源。
+* 允许重命名的符号。
+* 验证方式。
+* 已知风险或不确定点。
+
+## 12. Completion Gate
+
+只有以下条件全部满足后，才允许进入 `code-replica`：
+
+* [ ] `SOURCE_SPEC.md` 已生成。
+* [ ] `ARCHITECTURE.md` 已生成。
+* [ ] `PARAMETER_LOCK.json` 已生成。
+* [ ] `SYMBOL_MAP.json` 已生成。
+* [ ] `ASSET_MANIFEST.json` 已生成。
+* [ ] `REPLICATION_PLAN.md` 已生成。
+* [ ] 核心框架、入口、构建方式和运行平台已确认。
+* [ ] 核心参数已锁定。
+* [ ] 核心资源已登记。
+* [ ] 关键游戏行为已记录。

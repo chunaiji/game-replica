@@ -1,0 +1,354 @@
+# Asset Restyle Skill
+
+## 1. Purpose
+
+`asset-restyle` 负责游戏图片资源的批量分析、整理、风格统一和规格校正。
+
+核心原则：
+
+```text
+可以改变视觉风格，但不能破坏资源规格、动画结构和引用关系。
+```
+
+## 2. Required Input
+
+必须读取：
+
+```text
+replication/ASSET_MANIFEST.json
+replication/SOURCE_SPEC.md
+用户提供的视觉风格要求
+```
+
+视觉要求示例：
+
+```text
+统一成东方幻想风格
+统一成像素风
+统一成卡通风
+统一成赛博朋克
+```
+
+如果用户没有提出资源重制需求，本阶段仍需验证资源规格和引用关系，并在报告中说明未进行风格替换。
+
+## 3. Asset Classification
+
+首先分类：
+
+```text
+Character
+Enemy
+NPC
+Item
+Weapon
+Environment
+Background
+UI
+Icon
+Effect
+Particle
+Tile
+Sprite Sheet
+Animation
+Font
+Audio Reference
+```
+
+分类结果必须写回或补充到 `ASSET_MANIFEST.json`。
+
+## 4. Style Specification
+
+生成：
+
+```text
+replication/STYLE_SPEC.md
+```
+
+内容包括：
+
+```text
+Art Style
+Color Palette
+Lighting
+Outline
+Texture
+Perspective
+Material
+Shadow
+Saturation
+Contrast
+Character Proportion
+Environment Style
+UI Style
+Effects Style
+```
+
+所有图片共享同一份 `STYLE_SPEC.md`，不得为每张图片随意生成互不一致的风格。
+
+## 5. Dimension Rules
+
+默认：
+
+```text
+原始尺寸 = 新资源目标尺寸
+```
+
+示例：
+
+```text
+512 × 512   → 512 × 512
+1024 × 512  → 1024 × 512
+1920 × 1080 → 1920 × 1080
+```
+
+如果 AI 输出尺寸不同，必须进行：
+
+```text
+Resize
+Crop
+Padding
+```
+
+不得直接替换。
+
+## 6. Aspect Ratio
+
+默认禁止改变比例。
+
+示例：
+
+```text
+1920 × 1080
+Ratio: 16:9
+```
+
+新资源必须保持：
+
+```text
+16:9
+```
+
+禁止：
+
+```text
+1920 × 1080 → 1024 × 1024
+```
+
+除非用户明确要求改变比例，并且必须记录到 `ASSET_RESTYLE_REPORT.md`。
+
+## 7. Sprite Sheet Rules
+
+Sprite Sheet 必须记录：
+
+```text
+sheet_width
+sheet_height
+rows
+columns
+frame_width
+frame_height
+frame_count
+frame_order
+```
+
+示例：
+
+```text
+1024 × 1024
+8 × 8
+128 × 128
+64 frames
+```
+
+重新制作后必须保持相同结构。不得减少帧数、改变帧顺序或破坏图集切分方式。
+
+## 8. Animation Rules
+
+必须保持：
+
+```text
+Frame Count
+Frame Order
+Frame Size
+Animation Speed
+Loop
+Pivot
+Origin
+Anchor
+Hitbox Reference
+```
+
+示例：
+
+```text
+Idle:   8 frames
+Run:    12 frames
+Attack: 6 frames
+```
+
+不能因为重新生成图片而减少动画帧或改变动画播放语义。
+
+## 9. Generation Strategy
+
+每个资源的生成提示应由以下部分组成：
+
+```text
+STYLE_SPEC
+    +
+Asset Semantic
+    +
+Original Composition
+    +
+Original Dimension
+    +
+Asset Category
+    +
+Transparency / Sprite Sheet Requirements
+```
+
+不要使用：
+
+```text
+100 张图片 → 100 个完全不同 Prompt
+```
+
+应该使用统一风格规范，并针对每个资源补充语义差异。
+
+## 10. Transparent Assets
+
+对于以下资源：
+
+```text
+Character
+NPC
+Item
+Icon
+Effect
+Particle
+```
+
+如果原资源：
+
+```text
+Alpha = true
+```
+
+新资源也必须：
+
+```text
+Alpha = true
+```
+
+不得自动加入背景。需要背景的资源必须由原始资源或用户要求明确支持。
+
+## 11. Post Processing
+
+生成后必须执行：
+
+```text
+AI Generation
+    ↓
+Dimension Normalize
+    ↓
+Aspect Ratio Check
+    ↓
+Alpha Check
+    ↓
+Format Check
+    ↓
+Sprite Sheet Check
+    ↓
+Filename Mapping
+    ↓
+Reference Check
+    ↓
+Manifest Validation
+```
+
+## 12. Asset Replacement
+
+必须保持原始引用关系。
+
+示例：
+
+```text
+assets/player_idle.png
+```
+
+如果新资源用于替换该资源，默认仍输出到：
+
+```text
+assets/player_idle.png
+```
+
+优先直接替换资源文件，不要无必要地修改源码中的：
+
+```text
+Asset Path
+Resource ID
+Reference
+Atlas Key
+Animation Key
+```
+
+## 13. Asset Validation
+
+逐个检查：
+
+```text
+File Exists
+Dimension
+Aspect Ratio
+Format
+Alpha
+Sprite Sheet
+Frame Count
+Filename
+Reference
+```
+
+失败示例：
+
+```text
+player_idle.png
+Expected: 512 × 512 PNG RGBA
+Actual:   1024 × 1024 PNG RGBA
+Result:   FAIL
+```
+
+## 14. Report
+
+生成：
+
+```text
+replication/ASSET_RESTYLE_REPORT.md
+```
+
+报告必须包含：
+
+* Style Spec Summary
+* Processed Assets
+* Unchanged Assets
+* Resized / Cropped / Padded Assets
+* Alpha Validation
+* Sprite Sheet Validation
+* Reference Validation
+* Known Differences
+* Remaining Issues
+
+同时更新：
+
+```text
+replication/ASSET_MANIFEST.json
+```
+
+## 15. Completion Gate
+
+只有以下条件全部满足后，才允许进入 `replica-validator`：
+
+* [ ] `STYLE_SPEC.md` 已生成，或报告中说明用户未要求视觉重制。
+* [ ] 所有资源已按 Manifest 检查。
+* [ ] 尺寸、比例、格式和 Alpha 要求已验证。
+* [ ] Sprite Sheet 与动画帧结构已验证。
+* [ ] 引用关系已验证。
+* [ ] `ASSET_RESTYLE_REPORT.md` 已生成。

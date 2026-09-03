@@ -1,0 +1,56 @@
+# game-replica 文档与 Skill 目录建议
+
+本文档描述 `game-replica` Skill 包的推荐目录结构。当前 `doc/` 下的 `*-SKILL.txt` 可作为各 Skill 的 `SKILL.md` 初稿。
+
+```text
+game-replica/
+|
+├── SKILL.md
+|
+├── skills/
+│   ├── 01-source-analyzer/
+│   │   └── SKILL.md
+│   │
+│   ├── 02-code-replica/
+│   │   └── SKILL.md
+│   │
+│   ├── 03-asset-restyle/
+│   │   └── SKILL.md
+│   │
+│   └── 04-replica-validator/
+│       └── SKILL.md
+│
+├── references/
+│   ├── parameter-rules.md
+│   ├── asset-rules.md
+│   ├── validation-rules.md
+│   └── framework-rules.md
+│
+└── scripts/
+    ├── scan-project.py
+    ├── extract-parameters.py
+    ├── asset-manifest.py
+    ├── compare-parameters.py
+    ├── compare-assets.py
+    └── validate-build.py
+```
+
+## 文件职责
+
+| 路径 | 职责 |
+| --- | --- |
+| `SKILL.md` | 总控 Skill，声明完整复刻流程、阶段顺序、门禁和最终交付标准。 |
+| `skills/01-source-analyzer/SKILL.md` | 分析原始项目，生成源码、架构、参数、符号和资源规格。 |
+| `skills/02-code-replica/SKILL.md` | 基于分析结果重写代码，保持功能等价和参数一致。 |
+| `skills/03-asset-restyle/SKILL.md` | 按用户风格要求重制或统一资源，同时保持尺寸、格式、透明度、Sprite Sheet 结构和引用关系。 |
+| `skills/04-replica-validator/SKILL.md` | 对原项目与复刻项目执行最终差异验证，生成报告并判定是否完成。 |
+| `references/*.md` | 存放跨阶段规则，减少各 Skill 重复描述。 |
+| `scripts/*.py` | 存放自动扫描、参数提取、资源清单、构建验证和差异对比脚本。 |
+
+## 推荐落地步骤
+
+1. 将 `doc/game-replica-SKILL.txt` 复制为根目录 `SKILL.md`。
+2. 将四个子 Skill 文档分别复制到 `skills/01-*` 至 `skills/04-*`。
+3. 将重复规则拆分到 `references/`，并在对应 Skill 中按需引用。
+4. 为 `scripts/` 增加可重复执行的自动检查脚本。
+5. 用一个小型游戏项目跑通完整流程，反向修正文档中的缺口。

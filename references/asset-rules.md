@@ -87,3 +87,15 @@ assets/player_idle.png → assets/player_idle.png
 ```
 
 Avoid code changes for asset paths unless a manifest-backed reason requires it. If paths or keys change, update the manifest and symbol/reference reports.
+
+## Generation and Slicing Order
+
+When AI-generated art is used, keep the replacement flow in this order:
+
+1. Generate the image.
+2. Back up the raw generated file before any edits.
+3. Slice, crop, or cut the asset into the required final shape or Sprite Sheet frames.
+4. Normalize dimensions, alpha, and format.
+5. Write the final asset into the replica workspace under the matching path.
+
+Never replace the original project file directly with a generated draft. Always stage the replacement in the `_replace` workspace and keep the original source project untouched.

@@ -1,8 +1,8 @@
 interface:
   display_name: "Game Replica"
-  short_description: "复刻游戏并保持行为与资源规格一致"
+  short_description: "基于源码复刻游戏并保持行为与资源规格"
   brand_color: "#2563EB"
-  default_prompt: "Use $game-replica to analyze this game project, rewrite it as a behavior-preserving replica, restyle assets if requested, and validate the result."
+  default_prompt: "Use $game-replica to analyze this game project, create a sibling _replace workspace, replicate the code and assets, then validate the result."
 
 policy:
   allow_implicit_invocation: true

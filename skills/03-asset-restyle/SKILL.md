@@ -41,6 +41,24 @@ original asset dimensions = new asset dimensions
 
 Never directly replace an asset with an AI-generated image of a different size or alpha mode. Normalize and validate first.
 
+## Asset Replacement Order
+
+When new visual assets are generated, keep the working sequence explicit:
+
+1. Save and back up the raw generated image files.
+2. Cut or slice the generated image into the required final asset shapes or Sprite Sheet frames.
+3. Normalize size, aspect ratio, alpha, format, and frame layout as needed.
+4. Replace the corresponding asset inside the replica workspace at `<original-folder-name>_replace/`.
+
+Do not overwrite the original project. The final asset paths should match the replica project layout, not the source project layout.
+
+For example:
+
+```text
+Source:  <original>/assets/player_idle.png
+Replica: <original>_replace/assets/player_idle.png
+```
+
 ## Style Specification
 
 When restyling is requested, write:

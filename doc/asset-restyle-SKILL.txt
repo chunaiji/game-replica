@@ -111,6 +111,24 @@ Padding
 
 不得直接替换。
 
+## 5.5 Asset Replacement Order
+
+当使用生成图时，顺序必须明确：
+
+```text
+Generate
+    ↓
+Backup raw generated files
+    ↓
+Cut / slice / crop into final asset shapes or Sprite Sheet frames
+    ↓
+Normalize dimension / ratio / alpha / format
+    ↓
+Replace files inside <original-folder-name>_replace
+```
+
+不要直接拿生成草稿覆盖原项目文件。最终文件必须落在复刻项目同名路径下。
+
 ## 6. Aspect Ratio
 
 默认禁止改变比例。

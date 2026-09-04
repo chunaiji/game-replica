@@ -1,6 +1,6 @@
 ---
 name: game-replica
-description: Analyze, rewrite, restyle, and validate an existing game project as a behavior-preserving replica when the user has rights to the source.
+description: Analyze and replicate an existing game project into a sibling _replace workspace while preserving framework, behavior, parameters, and assets.
 metadata:
   short-description: Behavior-preserving game replica workflow
 ---
@@ -32,6 +32,7 @@ Do not skip gates:
 * Do not replace assets before `replication/ASSET_MANIFEST.json` exists.
 * Do not modify original source files. Create the replica in a sibling directory named `<original-folder-name>_replace` unless the user explicitly chooses another output path.
 * Preserve the original project's file and directory layout inside the replica workspace, including source, config, asset, scene, and build-entry paths.
+* When new art is generated, back it up first, then slice or cut it to the required final shapes, then place the finished files into the matching path inside `<original-folder-name>_replace`.
 * Do not change asset dimensions, aspect ratios, formats, alpha requirements, or Sprite Sheet layouts unless the user explicitly requests that difference.
 * Do not claim completion until validation produces `REPLICATION COMPLETE`.
 
